@@ -1,8 +1,8 @@
 /*
- * file:       PlannerCalendarTest.java
+ * file:       FieldListener.java
  * author:     Jon Iles
- * copyright:  (c) Packwood Software 2007
- * date:       23 February 2007
+ * copyright:  (c) Packwood Software 2006
+ * date:       March 30, 2005
  */
 
 /*
@@ -21,28 +21,24 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
 
-package net.sf.mpxj.junit;
+package net.sf.mpxj.listener;
 
-import static org.junit.Assert.*;
-import net.sf.mpxj.ProjectFile;
-import net.sf.mpxj.planner.PlannerReader;
-
-import org.junit.Test;
+import net.sf.mpxj.FieldContainer;
+import net.sf.mpxj.FieldType;
 
 /**
- * Tests to exercise Planner file read functionality.
+ * Classes implementing this interface can be used to receive notification
+ * of changes to task or resource fields.
  */
-public class PlannerCalendarTest
+public interface FieldListener
 {
-
    /**
-    * Test calendar data read from an MPP9 file.
+    * Called when a field value is changed.
     *
-    * @throws Exception
+    * @param container field container
+    * @param type field type
+    * @param oldValue old value
+    * @param newValue new value
     */
-   @Test public void testPlannerCalendar() throws Exception
-   {
-      ProjectFile mpp = new PlannerReader().read(MpxjTestData.filePath("planner-calendar.planner"));
-      assertNotNull(mpp);
-   }
+   public void fieldChange(FieldContainer container, FieldType type, Object oldValue, Object newValue);
 }
