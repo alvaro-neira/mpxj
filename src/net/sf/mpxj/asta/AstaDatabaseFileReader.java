@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -89,25 +88,15 @@ public final class AstaDatabaseFileReader implements ProjectReader
          // Note that we use the JDBC driver class directly here.
          // This ensures that it is an explicit dependency of MPXJ
          // and will work as expected in .Net.
-         
-         //claur avoid dependency on sqlite  
-         //m_connection = org.sqlite.JDBC.createConnection(url, props);
-         Class.forName("org.sqlite.JDBC");
-         m_connection = DriverManager.getConnection(url);
+         m_connection = org.sqlite.JDBC.createConnection(url, props);
          m_projectID = Integer.valueOf(0);
          return read();
       }
 
-      catch (ClassNotFoundException ex)  //claur
-      {
-  		// TODO Auto-generated catch block
-      	  throw new MPXJException("Sqlite missing", ex);
-      }
-      
       catch (SQLException ex)
       {
          throw new MPXJException("Failed to create connection", ex);
-      } 
+      }
 
       finally
       {

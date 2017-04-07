@@ -23,10 +23,10 @@
 
 package net.sf.mpxj.common;
 
-//claur: rtfparserkit not included
-//import java.io.IOException;
-//import com.rtfparserkit.converter.text.StringTextConverter;
-//import com.rtfparserkit.parser.RtfStringSource;
+import java.io.IOException;
+
+import com.rtfparserkit.converter.text.StringTextConverter;
+import com.rtfparserkit.parser.RtfStringSource;
 
 /**
  * This class is used to collect together utility functions for manipulating
@@ -53,25 +53,23 @@ public final class RtfHelper
     */
    public static String strip(String text)
    {
-//claur: rtfparserkit not included
-//      String result = text;
-//      if (text != null && !text.isEmpty())
-//      {
-//         try
-//         {
-//            boolean formalRTF = isFormalRTF(text);
-//            StringTextConverter stc = new StringTextConverter();
-//            stc.convert(new RtfStringSource(text));
-//            result = stripExtraLineEnd(stc.getText(), formalRTF);
-//         }
-//         catch (IOException ex)
-//         {
-//            result = "";
-//         }
-//      }
-//
-//      return result;
-	   return text;
+      String result = text;
+      if (text != null && !text.isEmpty())
+      {
+         try
+         {
+            boolean formalRTF = isFormalRTF(text);
+            StringTextConverter stc = new StringTextConverter();
+            stc.convert(new RtfStringSource(text));
+            result = stripExtraLineEnd(stc.getText(), formalRTF);
+         }
+         catch (IOException ex)
+         {
+            result = "";
+         }
+      }
+
+      return result;
    }
 
    /**
