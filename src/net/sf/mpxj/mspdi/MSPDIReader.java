@@ -138,6 +138,8 @@ public class MSPDIReader extends AbstractProjectReader {//claur removed final to
             config.setAutoCalendarUniqueID(false);
             config.setAutoAssignmentUniqueID(false);
 
+         m_projectFile.getProjectProperties().setFileApplication("Microsoft");
+         m_projectFile.getProjectProperties().setFileType("MSPDI");
             m_eventManager.addProjectListeners(m_projectListeners);
 
             SAXParserFactory factory = SAXParserFactory.newInstance();

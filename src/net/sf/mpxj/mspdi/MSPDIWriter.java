@@ -939,8 +939,6 @@ public class MSPDIWriter extends AbstractProjectWriter {//claur removed final to
         xml.setEstimated(Boolean.valueOf(mpx.getEstimated()));
         xml.setExternalTask(Boolean.valueOf(mpx.getExternalTask()));
         xml.setExternalTaskProject(mpx.getProject());
-        Date wa=mpx.getFinish();
-        String we=mpx.getFinishText();
         xml.setFinish(DatatypeConverter.printDate(mpx.getFinish()));
         xml.setFinishText(mpx.getFinishText());
         xml.setFinishVariance(DatatypeConverter.printDurationInIntegerThousandthsOfMinutes(mpx.getFinishVariance()));
