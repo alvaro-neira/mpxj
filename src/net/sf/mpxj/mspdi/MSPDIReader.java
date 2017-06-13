@@ -1608,7 +1608,7 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
 
    private boolean m_compatibleInput = true;
 
-   private ProjectFile m_projectFile;
+   protected ProjectFile m_projectFile; //claur
    private EventManager m_eventManager;
    private List<ProjectListener> m_projectListeners;
 }
