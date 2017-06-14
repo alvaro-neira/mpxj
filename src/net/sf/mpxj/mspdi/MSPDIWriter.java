@@ -190,7 +190,7 @@ public class MSPDIWriter extends AbstractProjectWriter {//claur removed final to
             writeCalendars(project);
             writeResources(project);
             writeTasks(project);
-            writeAssignments(project);
+//            writeAssignments(project);
             writeProjectExtendedAttributes(project);
 
             DatatypeConverter.setParentFile(m_projectFile);
