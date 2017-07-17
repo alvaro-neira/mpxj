@@ -185,10 +185,23 @@ final class PrimaveraReader
       Integer id = row.getInteger("clndr_id");
       m_calMap.put(id, calendar);
       calendar.setName(row.getString("clndr_name"));
-      calendar.setMinutesPerDay(Integer.valueOf((int) NumberHelper.getDouble(row.getDouble("day_hr_cnt")) * 60));
-      calendar.setMinutesPerWeek(Integer.valueOf((int) (NumberHelper.getDouble(row.getDouble("week_hr_cnt")) * 60)));
-      calendar.setMinutesPerMonth(Integer.valueOf((int) (NumberHelper.getDouble(row.getDouble("month_hr_cnt")) * 60)));
-      calendar.setMinutesPerYear(Integer.valueOf((int) (NumberHelper.getDouble(row.getDouble("year_hr_cnt")) * 60)));
+
+      try
+      {
+         calendar.setMinutesPerDay(Integer.valueOf((int) NumberHelper.getDouble(row.getDouble("day_hr_cnt")) * 60));
+         calendar.setMinutesPerWeek(Integer.valueOf((int) (NumberHelper.getDouble(row.getDouble("week_hr_cnt")) * 60)));
+         calendar.setMinutesPerMonth(Integer.valueOf((int) (NumberHelper.getDouble(row.getDouble("month_hr_cnt")) * 60)));
+         calendar.setMinutesPerYear(Integer.valueOf((int) (NumberHelper.getDouble(row.getDouble("year_hr_cnt")) * 60)));
+      }
+      catch (ClassCastException ex)
+      {
+         // We have seen examples of malformed calendar data where fields have been missing
+         // from the record. We'll typically get a class cast exception here as we're trying
+         // to process something which isn't a double.
+         // We'll just return at this point as it's not clear that we can salvage anything
+         // sensible from this record.
+         return;
+      }
 
       // Process data
       String calendarData = row.getString("clndr_data");
@@ -1349,6 +1362,7 @@ final class PrimaveraReader
       map.put(TaskField.REMAINING_WORK, "remain_work_qty");
       map.put(TaskField.BASELINE_WORK, "target_work_qty");
       map.put(TaskField.BASELINE_DURATION, "target_drtn_hr_cnt");
+      map.put(TaskField.DURATION, "target_drtn_hr_cnt");
       map.put(TaskField.CONSTRAINT_DATE, "cstr_date");
       map.put(TaskField.ACTUAL_START, "act_start_date");
       map.put(TaskField.ACTUAL_FINISH, "act_end_date");

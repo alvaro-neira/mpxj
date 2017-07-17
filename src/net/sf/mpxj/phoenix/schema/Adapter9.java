@@ -9,19 +9,19 @@ package net.sf.mpxj.phoenix.schema;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
-import net.sf.mpxj.TimeUnit;
+import net.sf.mpxj.Duration;
 
-public class Adapter8 extends XmlAdapter<String, TimeUnit>
+public class Adapter9 extends XmlAdapter<String, Duration>
 {
 
-   @Override public TimeUnit unmarshal(String value)
+   @Override public Duration unmarshal(String value)
    {
-      return (net.sf.mpxj.phoenix.DatatypeConverter.parseTimeUnits(value));
+      return (net.sf.mpxj.phoenix.DatatypeConverter.parseDuration(value));
    }
 
-   @Override public String marshal(TimeUnit value)
+   @Override public String marshal(Duration value)
    {
-      return (net.sf.mpxj.phoenix.DatatypeConverter.printTimeUnits(value));
+      return (net.sf.mpxj.phoenix.DatatypeConverter.printDuration(value));
    }
 
 }
