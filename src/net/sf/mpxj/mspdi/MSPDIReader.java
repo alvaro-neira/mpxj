@@ -1303,20 +1303,22 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
 
                 int lag;
 
-                if (link.getLinkLag() != null) {
-                    if (link.getLagFormat() == null) {
-                        System.err.println("lag format=null! task='" + currTask.getName()+"'");
-                        lag = 0;
-                    } else {
-                        int intlag = link.getLagFormat().intValue();
-                        lag = link.getLinkLag().intValue();
-                        if (intlag != 19 && intlag != 20 && intlag != 51 && intlag != 52) {
-                            lag = lag / 10;
-                        }
-                    }
-                } else {
-                    lag = 0;
-                }
+             if (link.getLinkLag() != null) {
+                 if (link.getLagFormat() == null) {
+                     if (link.getLinkLag().longValue() != 0) {
+                         System.err.println("lag format=null! and link lag=" + link.getLinkLag() + ", task='" + currTask.getName() + "'");
+                     }
+                     lag = 0;
+                 } else {
+                     int intlag = link.getLagFormat().intValue();
+                     lag = link.getLinkLag().intValue();
+                     if (intlag != 19 && intlag != 20 && intlag != 51 && intlag != 52) {
+                         lag = lag / 10;
+                     }
+                 }
+             } else {
+                 lag = 0;
+             }
 
                 TimeUnit lagUnits = DatatypeConverter.parseDurationTimeUnits(link.getLagFormat());
                 Duration lagDuration = Duration.convertUnits(lag, TimeUnit.MINUTES, lagUnits, m_projectFile.getProjectProperties());
