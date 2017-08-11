@@ -97,7 +97,8 @@ import net.sf.mpxj.writer.AbstractProjectWriter;
 /**
  * This class creates a new MSPDI file from the contents of an ProjectFile instance.
  */
-public class MSPDIWriter extends AbstractProjectWriter {//claur removed final to extend
+public class MSPDIWriter extends AbstractProjectWriter //claur removed final to extend
+{
     /**
      * Sets a flag to control whether timephased assignment data is split
      * into days. The default is true.
@@ -190,7 +191,7 @@ public class MSPDIWriter extends AbstractProjectWriter {//claur removed final to
             writeCalendars(project);
             writeResources(project);
             writeTasks(project);
-            writeAssignments(project);
+//            writeAssignments(project);
             writeProjectExtendedAttributes(project);
 
             DatatypeConverter.setParentFile(m_projectFile);

@@ -44,6 +44,10 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.sax.SAXSource;
 
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+
 import net.sf.mpxj.AssignmentField;
 import net.sf.mpxj.Availability;
 import net.sf.mpxj.AvailabilityTable;
@@ -99,14 +103,11 @@ import net.sf.mpxj.mspdi.schema.Project.Resources.Resource.Rates;
 import net.sf.mpxj.mspdi.schema.TimephasedDataType;
 import net.sf.mpxj.reader.AbstractProjectReader;
 
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-
 /**
  * This class creates a new ProjectFile instance by reading an MSPDI file.
  */
-public class MSPDIReader extends AbstractProjectReader {//claur removed final to extend
+public class MSPDIReader extends AbstractProjectReader //claur removed final to extend
+{
     /**
      * {@inheritDoc}
      */
@@ -140,8 +141,6 @@ public class MSPDIReader extends AbstractProjectReader {//claur removed final to
             config.setAutoCalendarUniqueID(false);
             config.setAutoAssignmentUniqueID(false);
 
-            m_projectFile.getProjectProperties().setFileApplication("Microsoft");
-            m_projectFile.getProjectProperties().setFileType("MSPDI");
             m_eventManager.addProjectListeners(m_projectListeners);
 
             SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -1129,6 +1128,8 @@ public class MSPDIReader extends AbstractProjectReader {//claur removed final to
             mpx.setWork(DatatypeConverter.parseDuration(m_projectFile, durationFormat, xml.getWork()));
             mpx.setWorkVariance(Duration.getInstance(NumberHelper.getDouble(xml.getWorkVariance()) / 1000, TimeUnit.MINUTES));
 
+            validateFinishDate(mpx);
+
             // read last to ensure correct caching
             mpx.setTotalSlack(DatatypeConverter.parseDurationInThousanthsOfMinutes(xml.getTotalSlack()));
             mpx.setCritical(BooleanHelper.getBoolean(xml.isCritical()));
@@ -1146,6 +1147,37 @@ public class MSPDIReader extends AbstractProjectReader {//claur removed final to
         m_eventManager.fireTaskReadEvent(mpx);
 
         return mpx;
+   }
+
+   /**
+    * When projectmanager.com exports schedules as MSPDI (via Aspose tasks)
+    * they do not have finish dates, just a start date and a duration.
+    * This method populates finish dates.
+    *
+    * @param task task to validate
+    */
+   private void validateFinishDate(Task task)
+   {
+      if (task.getFinish() == null)
+      {
+         Date startDate = task.getStart();
+         if (startDate != null)
+         {
+            if (task.getMilestone())
+            {
+               task.setFinish(startDate);
+            }
+            else
+            {
+               Duration duration = task.getDuration();
+               if (duration != null)
+               {
+                  ProjectCalendar calendar = task.getEffectiveCalendar();
+                  task.setFinish(calendar.getDate(startDate, duration, false));
+               }
+            }
+         }
+      }
     }
 
     /**
@@ -1271,20 +1303,22 @@ public class MSPDIReader extends AbstractProjectReader {//claur removed final to
 
                 int lag;
 
-                if (link.getLinkLag() != null) {
-                    if (link.getLagFormat() == null) {
-                        System.err.println("lag format=null! task=" + currTask.getName());
-                        lag = 0;
-                    } else {
-                        int intlag = link.getLagFormat().intValue();
-                        lag = link.getLinkLag().intValue();
-                        if (intlag != 19 && intlag != 20 && intlag != 51 && intlag != 52) {
-                            lag = lag / 10;
-                        }
-                    }
-                } else {
-                    lag = 0;
-                }
+             if (link.getLinkLag() != null) {
+                 if (link.getLagFormat() == null) {
+                     if (link.getLinkLag().longValue() != 0) {
+                         System.err.println("lag format=null! and link lag=" + link.getLinkLag() + ", task='" + currTask.getName() + "'");
+                     }
+                     lag = 0;
+                 } else {
+                     int intlag = link.getLagFormat().intValue();
+                     lag = link.getLinkLag().intValue();
+                     if (intlag != 19 && intlag != 20 && intlag != 51 && intlag != 52) {
+                         lag = lag / 10;
+                     }
+                 }
+             } else {
+                 lag = 0;
+             }
 
                 TimeUnit lagUnits = DatatypeConverter.parseDurationTimeUnits(link.getLagFormat());
                 Duration lagDuration = Duration.convertUnits(lag, TimeUnit.MINUTES, lagUnits, m_projectFile.getProjectProperties());
@@ -1321,12 +1355,15 @@ public class MSPDIReader extends AbstractProjectReader {//claur removed final to
      * @param splitFactory split task handling
      * @param normaliser   timephased resource assignment normaliser
      */
-    protected ResourceAssignment readAssignment(Project.Assignments.Assignment assignment, SplitTaskFactory splitFactory, TimephasedWorkNormaliser normaliser) { //claur changed to protected, changed return type from void to ResourceAssignment
+    protected ResourceAssignment readAssignment(Project.Assignments.Assignment assignment, SplitTaskFactory splitFactory, TimephasedWorkNormaliser normaliser)  //claur changed to protected, changed return type from void to ResourceAssignment
+    {    
         BigInteger taskUID = assignment.getTaskUID();
         BigInteger resourceUID = assignment.getResourceUID();
       if (taskUID != null && resourceUID != null)
       {
             Task task = m_projectFile.getTaskByUniqueID(Integer.valueOf(taskUID.intValue()));
+         if (task != null)
+         {
             Resource resource = m_projectFile.getResourceByUniqueID(Integer.valueOf(resourceUID.intValue()));
 
             //System.out.println(task);
@@ -1336,14 +1373,9 @@ public class MSPDIReader extends AbstractProjectReader {//claur removed final to
                 calendar = resource.getResourceCalendar();
             }
 
-         if (calendar == null)
+            if (calendar == null || task.getIgnoreResourceCalendar())
          {
-                calendar = task.getCalendar();
-            }
-
-         if (calendar == null)
-         {
-                calendar = m_projectFile.getDefaultCalendar();
+               calendar = task.getEffectiveCalendar();
             }
 
             LinkedList<TimephasedWork> timephasedComplete = readTimephasedAssignment(calendar, assignment, 2);
@@ -1362,8 +1394,6 @@ public class MSPDIReader extends AbstractProjectReader {//claur removed final to
             DefaultTimephasedWorkContainer timephasedCompleteData = new DefaultTimephasedWorkContainer(calendar, normaliser, timephasedComplete, raw);
             DefaultTimephasedWorkContainer timephasedPlannedData = new DefaultTimephasedWorkContainer(calendar, normaliser, timephasedPlanned, raw);
 
-         if (task != null)
-         {
                 ResourceAssignment mpx = task.addResourceAssignment(resource);
 
                 mpx.setActualCost(DatatypeConverter.parseCurrency(assignment.getActualCost()));
