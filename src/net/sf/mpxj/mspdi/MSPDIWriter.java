@@ -191,7 +191,7 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
             writeCalendars(project);
             writeResources(project);
             writeTasks(project);
-//            writeAssignments(project);
+            writeAssignments(project);
             writeProjectExtendedAttributes(project);
 
             DatatypeConverter.setParentFile(m_projectFile);
@@ -635,8 +635,8 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
 
       for (Resource resource : m_projectFile.getAllResources())
       {
-            list.add(writeResource(resource));
-        }
+          list.add(writeResource(resource));
+      }
     }
 
     /**

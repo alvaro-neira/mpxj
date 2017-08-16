@@ -1303,7 +1303,8 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
 
                 int lag;
 
-             if (link.getLinkLag() != null) {
+             if (link.getLinkLag() != null) 
+             {
                  if (link.getLagFormat() == null) {
                      if (link.getLinkLag().longValue() != 0) {
                          System.err.println("lag format=null! and link lag=" + link.getLinkLag() + ", task='" + currTask.getName() + "'");
@@ -1316,7 +1317,9 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
                          lag = lag / 10;
                      }
                  }
-             } else {
+             } 
+             else 
+             {
                  lag = 0;
              }
 
