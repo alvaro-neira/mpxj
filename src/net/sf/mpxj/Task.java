@@ -24,11 +24,7 @@
 
 package net.sf.mpxj;
 
-import java.util.Date;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import net.sf.mpxj.common.BooleanHelper;
 import net.sf.mpxj.common.DateHelper;
@@ -510,7 +506,13 @@ public final class Task extends ProjectEntity implements Comparable<Task>, Proje
       //
       // Retrieve the list of successors
       //
-      List<Relation> successorList = (List<Relation>) targetTask.getCachedValue(TaskField.SUCCESSORS);
+      List<Relation> successorList;
+      if(targetTask == null){
+         System.err.println("addPredecessor(null,"+type.toString()+","+lag.toString()+")");
+         successorList=new ArrayList<>();
+      } else {
+         successorList = (List<Relation>) targetTask.getCachedValue(TaskField.SUCCESSORS);
+      }
 
       //
       // Ensure that there is only one successor relationship between

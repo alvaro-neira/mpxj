@@ -1282,8 +1282,12 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
         List<Project.Tasks.Task.PredecessorLink> list = xml.getPredecessorLink();
 
         List<Relation> predecessors = mpx.getPredecessors();
-      for (Relation rel : predecessors)
-      {
+        for (Relation rel : predecessors)
+        {
+            if(rel.getTargetTask() == null){
+                System.err.println("Relation with null target task: "+rel.toString());
+                continue;
+            }
             Integer taskUniqueID = rel.getTargetTask().getUniqueID();
             list.add(writePredecessor(taskUniqueID, rel.getType(), rel.getLag()));
             m_eventManager.fireRelationWrittenEvent(rel);
