@@ -27,6 +27,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -362,12 +363,13 @@ final class PrimaveraReader
       Record exceptions = root.getChild("Exceptions");
       if (exceptions != null)
       {
+         Calendar cal = Calendar.getInstance();
          for (Record exception : exceptions.getChildren())
          {
-            int daysFrom1900 = Integer.parseInt(exception.getValue().split("\\|")[1]);
-            int daysFrom1970 = daysFrom1900 - 25568;
-            // 25568 -> Number of days from 1900 to 1970.
-            Date startEx = new Date(daysFrom1970 * 24l * 60l * 60l * 1000);
+            int daysFromEpoch = Integer.parseInt(exception.getValue().split("\\|")[1]);
+            cal.setTimeInMillis(EXCEPTION_EPOCH);
+            cal.add(Calendar.DAY_OF_YEAR, daysFromEpoch);
+            Date startEx = cal.getTime();
             calendar.addCalendarException(startEx, startEx);
          }
       }
@@ -952,6 +954,12 @@ final class PrimaveraReader
                   {
                      String activityID1 = (String) t1.getCurrentValue(activityIDField);
                      String activityID2 = (String) t2.getCurrentValue(activityIDField);
+
+                     if (activityID1 == null || activityID2 == null)
+                     {
+                        return (activityID1 == null && activityID2 == null ? 0 : (activityID1 == null ? 1 : -1));
+                     }
+
                      return activityID1.compareTo(activityID2);
                   }
 
@@ -1545,7 +1553,7 @@ final class PrimaveraReader
       {
          if (remainingDuration == 0)
          {
-            if (row.getString("status_code").equals("TK_Complete"))
+            if ("TK_Complete".equals(row.getString("status_code")))
             {
                result = 100;
             }
@@ -1813,4 +1821,6 @@ final class PrimaveraReader
       FIELD_TYPE_MAP.put("RSRC", FieldTypeClass.RESOURCE);
       FIELD_TYPE_MAP.put("TASKRSRC", FieldTypeClass.ASSIGNMENT);
    }
+
+   private static final long EXCEPTION_EPOCH = -2209161599935L;
 }
