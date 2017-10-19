@@ -46,7 +46,6 @@ import net.sf.mpxj.Availability;
 import net.sf.mpxj.CostRateTable;
 import net.sf.mpxj.CostRateTableEntry;
 import net.sf.mpxj.CustomField;
-import net.sf.mpxj.DataType;
 import net.sf.mpxj.DateRange;
 import net.sf.mpxj.Day;
 import net.sf.mpxj.DayType;
@@ -522,6 +521,7 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
             Exceptions.Exception ex = m_factory.createProjectCalendarsCalendarExceptionsException();
             el.add(ex);
 
+         ex.setName(exception.getName());
             ex.setEnteredByOccurrences(Boolean.FALSE);
             ex.setOccurrences(BigInteger.ONE);
             ex.setType(BigInteger.ONE);
@@ -979,6 +979,7 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
         xml.setExternalTask(Boolean.valueOf(mpx.getExternalTask()));
         xml.setExternalTaskProject(mpx.getProject());
         xml.setFinish(DatatypeConverter.printDate(mpx.getFinish()));
+      xml.setFinishSlack(DatatypeConverter.printDurationInIntegerTenthsOfMinutes(mpx.getFinishSlack()));
         xml.setFinishText(mpx.getFinishText());
         xml.setFinishVariance(DatatypeConverter.printDurationInIntegerThousandthsOfMinutes(mpx.getFinishVariance()));
         xml.setFixedCost(DatatypeConverter.printCurrency(mpx.getFixedCost()));
@@ -993,6 +994,7 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
         // This is not correct
         //xml.setFreeSlack(BigInteger.valueOf((long)DatatypeConverter.printDurationInMinutes(mpx.getFreeSlack())*1000));
         //xml.setFreeSlack(BIGINTEGER_ZERO);
+      xml.setFreeSlack(DatatypeConverter.printDurationInIntegerTenthsOfMinutes(mpx.getFreeSlack()));
         xml.setHideBar(Boolean.valueOf(mpx.getHideBar()));
         xml.setIsNull(Boolean.valueOf(mpx.getNull()));
         xml.setIsSubproject(Boolean.valueOf(mpx.getSubProject() != null));
@@ -1068,12 +1070,13 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
         xml.setResumeValid(Boolean.valueOf(mpx.getResumeValid()));
         xml.setRollup(Boolean.valueOf(mpx.getRollup()));
         xml.setStart(DatatypeConverter.printDate(mpx.getStart()));
+      xml.setStartSlack(DatatypeConverter.printDurationInIntegerTenthsOfMinutes(mpx.getStartSlack()));
         xml.setStartText(mpx.getStartText());
         xml.setStartVariance(DatatypeConverter.printDurationInIntegerThousandthsOfMinutes(mpx.getStartVariance()));
         xml.setStop(DatatypeConverter.printDate(mpx.getStop()));
         xml.setSubprojectName(mpx.getSubprojectName());
         xml.setSummary(Boolean.valueOf(mpx.getSummary()));
-        xml.setTotalSlack(DatatypeConverter.printDurationInIntegerThousandthsOfMinutes(mpx.getTotalSlack()));
+      xml.setTotalSlack(DatatypeConverter.printDurationInIntegerTenthsOfMinutes(mpx.getTotalSlack()));
         xml.setType(mpx.getType());
         xml.setUID(mpx.getUniqueID());
         xml.setWBS(mpx.getWBS());

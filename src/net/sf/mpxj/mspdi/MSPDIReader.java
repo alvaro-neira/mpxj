@@ -24,7 +24,9 @@
 package net.sf.mpxj.mspdi;
 
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -82,6 +84,7 @@ import net.sf.mpxj.TaskMode;
 import net.sf.mpxj.TimeUnit;
 import net.sf.mpxj.TimephasedWork;
 import net.sf.mpxj.common.BooleanHelper;
+import net.sf.mpxj.common.CharsetHelper;
 import net.sf.mpxj.common.DefaultTimephasedWorkContainer;
 import net.sf.mpxj.common.FieldTypeHelper;
 import net.sf.mpxj.common.MPPAssignmentField;
@@ -89,6 +92,7 @@ import net.sf.mpxj.common.MPPResourceField;
 import net.sf.mpxj.common.MPPTaskField;
 import net.sf.mpxj.common.NumberHelper;
 import net.sf.mpxj.common.Pair;
+import net.sf.mpxj.common.ReplaceOnceStream;
 import net.sf.mpxj.common.SplitTaskFactory;
 import net.sf.mpxj.common.TimephasedWorkNormaliser;
 import net.sf.mpxj.listener.ProjectListener;
@@ -109,6 +113,42 @@ import net.sf.mpxj.reader.AbstractProjectReader;
 public class MSPDIReader extends AbstractProjectReader //claur removed final to extend
 {
     /**
+    * Sets the character encoding used when reading an XER file.
+    *
+    * @param encoding encoding name
+    */
+   public void setEncoding(String encoding)
+   {
+      m_encoding = encoding;
+   }
+
+   /**
+    * Alternative way to set the file encoding. If both an encoding name and a Charset instance
+    * are supplied, the Charset instance is used.
+    *
+    * @param charset Charset used when reading the file
+    */
+   public void setCharset(Charset charset)
+   {
+      m_charset = charset;
+   }
+
+   /**
+    * Retrieve the Charset used to read the file.
+    *
+    * @return Charset instance
+    */
+   private Charset getCharset()
+   {
+      Charset result = m_charset;
+      if (result == null)
+      {
+         result = m_encoding == null ? CharsetHelper.UTF8 : Charset.forName(m_encoding);
+      }
+      return result;
+   }
+
+   /**
      * {@inheritDoc}
      */
    @Override public void addProjectListener(ProjectListener listener)
@@ -125,30 +165,35 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
      */
    @Override public ProjectFile read(InputStream stream) throws MPXJException
    {
-       try
-       {
-            m_projectFile = new ProjectFile();
-            m_eventManager = m_projectFile.getEventManager();
+      try
+      {
+         //
+         // This is a hack to ensure that the incoming file has a namespace
+         // which JAXB will accept.
+         //
+         InputStream namespaceCorrectedStream = new ReplaceOnceStream(stream, NAMESPACE_REGEX, NAMESPACE_REPLACEMENT, NAMESPACE_SCOPE, getCharset());
+         m_projectFile = new ProjectFile();
+         m_eventManager = m_projectFile.getEventManager();
 
-            ProjectConfig config = m_projectFile.getProjectConfig();
-            config.setAutoTaskID(false);
-            config.setAutoTaskUniqueID(false);
-            config.setAutoResourceID(false);
-            config.setAutoResourceUniqueID(false);
-            config.setAutoOutlineLevel(false);
-            config.setAutoOutlineNumber(false);
-            config.setAutoWBS(false);
-            config.setAutoCalendarUniqueID(false);
-            config.setAutoAssignmentUniqueID(false);
+         ProjectConfig config = m_projectFile.getProjectConfig();
+         config.setAutoTaskID(false);
+         config.setAutoTaskUniqueID(false);
+         config.setAutoResourceID(false);
+         config.setAutoResourceUniqueID(false);
+         config.setAutoOutlineLevel(false);
+         config.setAutoOutlineNumber(false);
+         config.setAutoWBS(false);
+         config.setAutoCalendarUniqueID(false);
+         config.setAutoAssignmentUniqueID(false);
 
-            m_eventManager.addProjectListeners(m_projectListeners);
+         m_eventManager.addProjectListeners(m_projectListeners);
 
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            factory.setNamespaceAware(true);
-            SAXParser saxParser = factory.newSAXParser();
-            XMLReader xmlReader = saxParser.getXMLReader();
-            SAXSource doc = new SAXSource(xmlReader, new InputSource(stream));
+         SAXParserFactory factory = SAXParserFactory.newInstance();
+         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+         factory.setNamespaceAware(true);
+         SAXParser saxParser = factory.newSAXParser();
+         XMLReader xmlReader = saxParser.getXMLReader();
+         SAXSource doc = new SAXSource(xmlReader, new InputSource(new InputStreamReader(namespaceCorrectedStream, getCharset())));
 
             if (CONTEXT == null)
             {
@@ -311,10 +356,17 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
       }
       else
       {
-         properties.setFileApplication("Microsoft");
+         if (properties.getAuthor() != null && properties.getAuthor().equals("SG Project"))
+         {
+            properties.setFileApplication("Simple Genius");
+         }
+         else
+         {
+            properties.setFileApplication("Microsoft");
+         }
       }
       properties.setFileType("MSPDI");
-    }
+   }
 
     /**
      * This method extracts calendar data from an MSPDI file.
@@ -392,13 +444,15 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
       {
             baseCalendars.add(new Pair<ProjectCalendar, BigInteger>(bc, baseCalendarID));
         }
+      readExceptions(calendar, bc);
+      boolean readExceptionsFromDays = bc.getCalendarExceptions().isEmpty();
 
         Project.Calendars.Calendar.WeekDays days = calendar.getWeekDays();
       if (days != null)
       {
          for (Project.Calendars.Calendar.WeekDays.WeekDay weekDay : days.getWeekDay())
          {
-                readDay(bc, weekDay);
+            readDay(bc, weekDay, readExceptionsFromDays);
             }
       }
       else
@@ -412,7 +466,6 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
             bc.setWorkingDay(Day.SATURDAY, DayType.DEFAULT);
         }
 
-        readExceptions(calendar, bc);
 
         readWorkWeeks(calendar, bc);
 
@@ -426,15 +479,19 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
      *
      * @param calendar Calendar data
      * @param day      Day data
+    * @param readExceptionsFromDays read exceptions form day definitions
      */
-   private void readDay(ProjectCalendar calendar, Project.Calendars.Calendar.WeekDays.WeekDay day)
+   private void readDay(ProjectCalendar calendar, Project.Calendars.Calendar.WeekDays.WeekDay day, boolean readExceptionsFromDays)
    {
         BigInteger dayType = day.getDayType();
       if (dayType != null)
       {
          if (dayType.intValue() == 0)
          {
+            if (readExceptionsFromDays)
+         {
                 readExceptionDay(calendar, day);
+         }
          }
          else
          {
@@ -541,6 +598,7 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
             if (fromDate != null && toDate != null)
             {
                     ProjectCalendarException bce = bc.addCalendarException(fromDate, toDate);
+               bce.setName(exception.getName());
 
                     Project.Calendars.Calendar.Exceptions.Exception.WorkingTimes times = exception.getWorkingTimes();
                if (times != null)
@@ -1034,7 +1092,6 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
             //mpx.setFlag9();
             //mpx.setFlag10();
             // This is not correct?
-            mpx.setFreeSlack(DatatypeConverter.parseDurationInThousanthsOfMinutes(xml.getFreeSlack()));
             mpx.setHideBar(BooleanHelper.getBoolean(xml.isHideBar()));
             mpx.setHyperlink(xml.getHyperlink());
             mpx.setHyperlinkAddress(xml.getHyperlinkAddress());
@@ -1131,7 +1188,10 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
             validateFinishDate(mpx);
 
             // read last to ensure correct caching
-            mpx.setTotalSlack(DatatypeConverter.parseDurationInThousanthsOfMinutes(xml.getTotalSlack()));
+         mpx.setStartSlack(DatatypeConverter.parseDurationInTenthsOfMinutes(xml.getStartSlack()));
+         mpx.setFinishSlack(DatatypeConverter.parseDurationInTenthsOfMinutes(xml.getFinishSlack()));
+         mpx.setFreeSlack(DatatypeConverter.parseDurationInTenthsOfMinutes(xml.getFreeSlack()));
+         mpx.setTotalSlack(DatatypeConverter.parseDurationInTenthsOfMinutes(xml.getTotalSlack()));
             mpx.setCritical(BooleanHelper.getBoolean(xml.isCritical()));
 
             readTaskExtendedAttributes(xml, mpx);
@@ -1573,7 +1633,7 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
          }
          else
          {
-                work = Duration.getInstance(NumberHelper.truncate(work.getDuration(), 2), TimeUnit.MINUTES);
+            work = Duration.getInstance(NumberHelper.round(work.getDuration(), 2), TimeUnit.MINUTES);
             }
 
             TimephasedWork tra = new TimephasedWork();
@@ -1645,9 +1705,13 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
         }
     }
 
-    private boolean m_compatibleInput = true;
-
-    protected ProjectFile m_projectFile; //claur need protected to add default assignment
-    private EventManager m_eventManager;
-    private List<ProjectListener> m_projectListeners;
+   private boolean m_compatibleInput = true;
+   private String m_encoding;
+   private Charset m_charset;
+   protected ProjectFile m_projectFile; //claur need protected to add default assignment
+   private EventManager m_eventManager;
+   private List<ProjectListener> m_projectListeners;
+   private static final int NAMESPACE_SCOPE = 512;
+   private static final String NAMESPACE_REGEX = "xmlns=\\\"http://schemas\\.microsoft\\.com/project.*\\\"";
+   private static final String NAMESPACE_REPLACEMENT = "xmlns=\"http://schemas.microsoft.com/project\"";
 }
