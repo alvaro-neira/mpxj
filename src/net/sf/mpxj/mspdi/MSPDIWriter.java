@@ -1375,7 +1375,7 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
         for (Relation rel : predecessors)
         {
             if(rel.getTargetTask() == null){
-                System.err.println("Relation with null target task: "+rel.toString());
+                System.err.println("Relation with null target task: " + rel.toString());
                 continue;
             }
             Integer taskUniqueID = rel.getTargetTask().getUniqueID();
