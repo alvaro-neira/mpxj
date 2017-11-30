@@ -657,6 +657,11 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
       rd.setRelative(getRelative(NumberHelper.getInt(exception.getType())));
       rd.setOccurrences(NumberHelper.getInteger(exception.getOccurrences()));
 
+      if(rd.getRecurrenceType() == null){
+          System.err.println("RecurringData has null recurrenceType.");
+          return;
+      }
+
       switch (rd.getRecurrenceType())
       {
          case DAILY:

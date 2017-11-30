@@ -89,7 +89,12 @@ public final class DatatypeConverter
       }
       else
       {
-         result = NumberHelper.getDouble(Double.parseDouble(correctNumberFormat(value)) / 100);
+         try {
+            result = NumberHelper.getDouble(Double.parseDouble(correctNumberFormat(value)) / 100);
+         } catch (NumberFormatException ex){
+            System.err.println("parseExtendedAttributeCurrency(): invalid double '"+value+"'");
+            return null;
+         }
       }
       return result;
    }
@@ -784,7 +789,14 @@ public final class DatatypeConverter
 
       if (value != null && value.length() != 0)
       {
-         XsdDuration xsd = new XsdDuration(value);
+         XsdDuration xsd;
+         try {
+            xsd = new XsdDuration(value);
+         } catch(IllegalArgumentException ex){
+            System.err.println("parseDuration(): illegal value='"+value+"'");
+            return null;
+         }
+
          TimeUnit units = TimeUnit.DAYS;
 
          if (xsd.getSeconds() != 0 || xsd.getMinutes() != 0)
