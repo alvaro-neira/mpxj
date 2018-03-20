@@ -922,6 +922,7 @@ public final class PrimaveraXERFileReader extends AbstractProjectReader
       FIELD_TYPE_MAP.put("anticip_end_date", XerFieldType.DATE);
       FIELD_TYPE_MAP.put("parent_wbs_id", XerFieldType.INTEGER);
       FIELD_TYPE_MAP.put("task_id", XerFieldType.INTEGER);
+      FIELD_TYPE_MAP.put("task_code", XerFieldType.STRING);
       FIELD_TYPE_MAP.put("phys_complete_pct", XerFieldType.DOUBLE);
       FIELD_TYPE_MAP.put("remain_drtn_hr_cnt", XerFieldType.DURATION);
       FIELD_TYPE_MAP.put("act_work_qty", XerFieldType.DURATION);

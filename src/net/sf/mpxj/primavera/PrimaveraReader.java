@@ -23,58 +23,14 @@
 
 package net.sf.mpxj.primavera;
 
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-import net.sf.mpxj.AssignmentField;
-import net.sf.mpxj.Availability;
-import net.sf.mpxj.AvailabilityTable;
-import net.sf.mpxj.ChildTaskContainer;
-import net.sf.mpxj.ConstraintType;
-import net.sf.mpxj.CostRateTable;
-import net.sf.mpxj.CostRateTableEntry;
-import net.sf.mpxj.CurrencySymbolPosition;
-import net.sf.mpxj.CustomFieldContainer;
-import net.sf.mpxj.DataType;
-import net.sf.mpxj.DateRange;
-import net.sf.mpxj.Day;
-import net.sf.mpxj.DayType;
-import net.sf.mpxj.Duration;
-import net.sf.mpxj.EventManager;
-import net.sf.mpxj.FieldContainer;
-import net.sf.mpxj.FieldType;
-import net.sf.mpxj.FieldTypeClass;
-import net.sf.mpxj.Priority;
-import net.sf.mpxj.ProjectCalendar;
-import net.sf.mpxj.ProjectCalendarDateRanges;
-import net.sf.mpxj.ProjectCalendarException;
-import net.sf.mpxj.ProjectCalendarHours;
-import net.sf.mpxj.ProjectConfig;
-import net.sf.mpxj.ProjectFile;
-import net.sf.mpxj.ProjectProperties;
-import net.sf.mpxj.Rate;
-import net.sf.mpxj.Relation;
-import net.sf.mpxj.RelationType;
-import net.sf.mpxj.Resource;
-import net.sf.mpxj.ResourceAssignment;
-import net.sf.mpxj.ResourceField;
-import net.sf.mpxj.ResourceType;
-import net.sf.mpxj.Task;
-import net.sf.mpxj.TaskField;
-import net.sf.mpxj.TaskType;
-import net.sf.mpxj.TimeUnit;
+import net.sf.mpxj.*;
 import net.sf.mpxj.common.BooleanHelper;
 import net.sf.mpxj.common.DateHelper;
 import net.sf.mpxj.common.NumberHelper;
@@ -576,6 +532,8 @@ final class PrimaveraReader
       ProjectProperties projectProperties = m_project.getProjectProperties();
       String projectName = projectProperties.getName();
       Set<Integer> uniqueIDs = new HashSet<Integer>();
+      HashMap<Integer,Integer> uidMapping=new HashMap<>();
+      HashMap<Integer,HashMap<String,String>> wbsIds=new HashMap<>();
 
       //
       // We set the project name when we read the project properties, but that's just
@@ -599,8 +557,12 @@ final class PrimaveraReader
          Task task = m_project.addTask();
          task.setProject(projectName); // P6 task always belongs to project
          processFields(m_wbsFields, row, task);
-         uniqueIDs.add(task.getUniqueID());
          m_eventManager.fireTaskReadEvent(task);
+         HashMap<String,String> val=new HashMap<>();
+         val.put("seq_num",""+row.getInteger("seq_num"));
+         val.put("wbs_short_name",row.getString("wbs_short_name"));
+         val.put("parent_wbs_id",""+row.getInteger("parent_wbs_id"));
+         wbsIds.put(row.getInteger("wbs_id"),val);
       }
 
       //
@@ -696,12 +658,49 @@ final class PrimaveraReader
          }
 
          m_eventManager.fireTaskReadEvent(task);
+
+         String name = row.getString("task_name");
+         String taskCode = row.getString("task_code");
+         uidMapping.put(task.getUniqueID(), integerRepresentation(taskCode));
       }
 
       sortActivities(activityIDField, m_project);
       updateStructure();
       updateDates();
       updateWork();
+
+      Iterator<Task> it = this.m_project.getTasks().iterator();
+      while (it.hasNext()) {
+         Task task = it.next();
+
+         Integer taskId = task.getUniqueID();
+         Integer newUniqueId=uidMapping.get(taskId);
+         if(newUniqueId==null) {
+            HashMap<String,String> hm=wbsIds.get(taskId);
+            Integer parentId=Integer.parseInt(hm.get("parent_wbs_id"));
+            String str=hm.get("wbs_short_name");
+
+            HashMap<String,String> parent=wbsIds.get(parentId);
+            while(parent!=null){
+               str=parent.get("wbs_short_name")+"\n"+str;
+               parent=wbsIds.get(Integer.parseInt(parent.get("parent_wbs_id")));
+            }
+            Integer newUid = integerRepresentation("\n" + str);
+            task.setUniqueID(newUid);
+         }else{
+            task.setUniqueID(newUniqueId);
+         }
+      }
+   }
+
+   private static Integer integerRepresentation(String s){
+      if(s.compareTo("")==0){
+         return 0;
+      }
+      byte[] bytes=s.getBytes();
+      BigInteger bigInteger = new BigInteger(bytes);
+      return bigInteger.mod(new BigInteger("2097151")).intValue(); //2097151 is MS Project Max UID
+//      return bigInteger.mod(new BigInteger("2147483647")).intValue(); //2147483647 is 2^31-1, the usual max possible Java integer
    }
 
    /**
@@ -1386,6 +1385,11 @@ final class PrimaveraReader
       {
          FieldType field = entry.getKey();
          String name = entry.getValue();
+
+//         if(name.trim().compareTo("task_id")==0 && container instanceof Task && row.getInteger("task_id")!=null){
+//            ((Task) container).setPrimaveraTaskId(row.getInteger("task_id"));
+////            m_project.getTaskByUniqueID(currentID);
+//         }
 
          Object value;
          switch (field.getDataType())

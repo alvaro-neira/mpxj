@@ -4912,7 +4912,7 @@ public final class Task extends ProjectEntity implements Comparable<Task>, Proje
     */
    @Override public String toString()
    {
-      return ("[Task id=" + getID() + " uniqueID=" + getUniqueID() + " name=" + getName() + (getExternalTask() ? " [EXTERNAL uid=" + getSubprojectTaskUniqueID() + " id=" + getSubprojectTaskID() + "]" : "]") + (getSubProject() == null ? "" : (" project=" + getSubProject())));
+      return ("[Task id=" + getID() + " uniqueID=" + getUniqueID() + " name=" + getName() + " " + m_children.size() + " children");//(getExternalTask() ? " [EXTERNAL uid=" + getSubprojectTaskUniqueID() + " id=" + getSubprojectTaskID() + "]" : "]") + (getSubProject() == null ? "" : (" project=" + getSubProject())));
    }
 
    /**
@@ -5018,4 +5018,12 @@ public final class Task extends ProjectEntity implements Comparable<Task>, Proje
    private Date m_splitsComplete;
    private SubProject m_subProject;
    private List<FieldListener> m_listeners;
+
+//   private Integer primaveraTaskId;
+//   public void setPrimaveraTaskId(Integer primaveraTaskId){
+//      this.primaveraTaskId=primaveraTaskId;
+//   }
+//   public Integer getPrimaveraTaskId(){
+//      return primaveraTaskId;
+//   }
 }
