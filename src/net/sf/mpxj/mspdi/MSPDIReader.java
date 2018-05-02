@@ -115,7 +115,7 @@ import net.sf.mpxj.reader.AbstractProjectReader;
 public class MSPDIReader extends AbstractProjectReader //claur removed final to extend
 {
     /**
-    * Sets the character encoding used when reading an XER file.
+    * Sets the character encoding used when reading an MSPDI file.
     *
     * @param encoding encoding name
     */
