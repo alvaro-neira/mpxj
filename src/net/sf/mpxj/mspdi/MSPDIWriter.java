@@ -1126,7 +1126,7 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
         xml.setOverAllocated(Boolean.valueOf(mpx.getOverAllocated()));
         xml.setOvertimeCost(DatatypeConverter.printCurrency(mpx.getOvertimeCost()));
         xml.setOvertimeWork(DatatypeConverter.printDuration(this, mpx.getOvertimeWork()));
-        xml.setPercentComplete(NumberHelper.getBigInteger(mpx.getPercentageComplete()));
+        xml.setPercentComplete(NumberHelper.getBigInteger(NumberHelper.getDouble(mpx.getPercentageComplete())*100.0));
         xml.setPercentWorkComplete(NumberHelper.getBigInteger(mpx.getPercentageWorkComplete()));
         xml.setPhysicalPercentComplete(NumberHelper.getBigInteger(mpx.getPhysicalPercentComplete()));
         xml.setPriority(DatatypeConverter.printPriority(mpx.getPriority()));
