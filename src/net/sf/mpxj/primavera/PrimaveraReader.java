@@ -151,8 +151,9 @@ final class PrimaveraReader
     * Process project properties.
     *
     * @param rows project properties data.
+    * @param projectID project ID
     */
-   public void processProjectProperties(List<Row> rows)
+   public void processProjectProperties(List<Row> rows, Integer projectID)
    {
       if (rows.isEmpty() == false)
       {
@@ -165,6 +166,7 @@ final class PrimaveraReader
          properties.setDefaultTaskType(TASK_TYPE_MAP.get(row.getString("def_duration_type")));
          properties.setStatusDate(row.getDate("last_recalc_date"));
          properties.setFiscalYearStartMonth(row.getInteger("fy_start_month_num"));
+         properties.setUniqueID(projectID == null ? null : projectID.toString());
          // cannot assign actual calendar yet as it has not been read yet
          m_defaultCalendarID = row.getInteger("clndr_id");
       }
@@ -1218,15 +1220,19 @@ final class PrimaveraReader
          Duration lag = row.getDuration("lag_hr_cnt");
          if (currentTask != null)
          {
+            Integer uniqueID = row.getInteger("task_pred_id");
             if (predecessorTask != null)
             {
                Relation relation = currentTask.addPredecessor(predecessorTask, type, lag);
+               relation.setUniqueID(uniqueID);
                m_eventManager.fireRelationReadEvent(relation);
             }
             else
             {
                // if we can't find the predecessor, it must lie outside the project
-               m_externalPredecessors.add(new ExternalPredecessorRelation(predecessorID, currentTask, type, lag));
+               ExternalPredecessorRelation relation = new ExternalPredecessorRelation(predecessorID, currentTask, type, lag);
+               m_externalPredecessors.add(relation);
+               relation.setUniqueID(uniqueID);
             }
          }
       }

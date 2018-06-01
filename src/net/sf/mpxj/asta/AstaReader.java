@@ -48,6 +48,7 @@ import net.sf.mpxj.ProjectCalendarWeek;
 import net.sf.mpxj.ProjectConfig;
 import net.sf.mpxj.ProjectFile;
 import net.sf.mpxj.ProjectProperties;
+import net.sf.mpxj.Relation;
 import net.sf.mpxj.RelationType;
 import net.sf.mpxj.Resource;
 import net.sf.mpxj.ResourceAssignment;
@@ -130,7 +131,7 @@ final class AstaReader
          resource.setName(row.getString("NASE"));
          resource.setResourceCalendar(deriveResourceCalendar(row.getInteger("CALENDAV")));
          resource.setMaxUnits(Double.valueOf(row.getDouble("AVAILABILITY").doubleValue() * 100));
-         resource.setIsGeneric(row.getBoolean("CREATED_AS_FOLDER"));
+         resource.setGeneric(row.getBoolean("CREATED_AS_FOLDER"));
          resource.setInitials(getInitials(resource.getName()));
       }
 
@@ -162,7 +163,7 @@ final class AstaReader
          resource.setResourceCalendar(deriveResourceCalendar(row.getInteger("CALENDAV")));
          resource.setAvailableFrom(row.getDate("AVAILABLE_FROM"));
          resource.setAvailableTo(row.getDate("AVAILABLE_TO"));
-         resource.setIsGeneric(row.getBoolean("CREATED_AS_FOLDER"));
+         resource.setGeneric(row.getBoolean("CREATED_AS_FOLDER"));
          resource.setMaterialLabel(row.getString("MEASUREMENT"));
          resource.setInitials(getInitials(resource.getName()));
       }
@@ -637,7 +638,8 @@ final class AstaReader
                }
             }
 
-            endTask.addPredecessor(startTask, type, lag);
+            Relation relation = endTask.addPredecessor(startTask, type, lag);
+            relation.setUniqueID(row.getInteger("LINKID"));
          }
 
          //PROJID

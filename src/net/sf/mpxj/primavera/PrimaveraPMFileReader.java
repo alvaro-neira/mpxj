@@ -251,6 +251,7 @@ public final class PrimaveraPMFileReader extends AbstractProjectReader
       properties.setStartDate(project.getPlannedStartDate());
       properties.setStatusDate(project.getDataDate());
       properties.setProjectTitle(project.getId());
+      properties.setUniqueID(project.getObjectId() == null ? null : project.getObjectId().toString());
 
       List<GlobalPreferencesType> list = apibo.getGlobalPreferences();
       if (!list.isEmpty())
@@ -844,6 +845,7 @@ public final class PrimaveraPMFileReader extends AbstractProjectReader
             RelationType type = RELATION_TYPE_MAP.get(row.getType());
             Duration lag = getDuration(row.getLag());
             Relation relation = currentTask.addPredecessor(predecessorTask, type, lag);
+            relation.setUniqueID(row.getObjectId());
             m_eventManager.fireRelationReadEvent(relation);
          }
       }
