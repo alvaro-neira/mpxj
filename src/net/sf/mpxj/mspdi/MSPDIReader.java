@@ -922,7 +922,7 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
         mpx.setID(NumberHelper.getInteger(xml.getID()));
         mpx.setInitials(xml.getInitials());
         mpx.setIsEnterprise(BooleanHelper.getBoolean(xml.isIsEnterprise()));
-        mpx.setIsGeneric(BooleanHelper.getBoolean(xml.isIsGeneric()));
+      mpx.setGeneric(BooleanHelper.getBoolean(xml.isIsGeneric()));
         mpx.setIsInactive(BooleanHelper.getBoolean(xml.isIsInactive()));
         mpx.setIsNull(BooleanHelper.getBoolean(xml.isIsNull()));
         //mpx.setLinkedFields();
