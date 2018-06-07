@@ -777,7 +777,7 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
         xml.setInitials(mpx.getInitials());
         xml.setIsEnterprise(Boolean.valueOf(mpx.getEnterprise()));
         xml.setIsGeneric(Boolean.valueOf(mpx.getGeneric()));
-        xml.setIsInactive(Boolean.valueOf(mpx.getInactive()));
+      xml.setIsInactive(Boolean.valueOf(!mpx.getActive()));
         xml.setIsNull(Boolean.valueOf(mpx.getNull()));
         xml.setMaterialLabel(mpx.getMaterialLabel());
         xml.setMaxUnits(DatatypeConverter.printUnits(mpx.getMaxUnits()));
