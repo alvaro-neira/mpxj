@@ -97,7 +97,7 @@ import net.sf.mpxj.writer.AbstractProjectWriter;
 /**
  * This class creates a new MSPDI file from the contents of an ProjectFile instance.
  */
-public final class MSPDIWriter extends AbstractProjectWriter
+public class MSPDIWriter extends AbstractProjectWriter //claur removed final to extend
 {
    /**
     * Sets a flag to control whether timephased assignment data is split
@@ -1034,7 +1034,7 @@ public final class MSPDIWriter extends AbstractProjectWriter
     * @param mpx Task data
     * @return new task instance
     */
-   private Project.Tasks.Task writeTask(Task mpx)
+    protected Project.Tasks.Task writeTask(Task mpx)  //claur changed to protected
    {
       Project.Tasks.Task xml = m_factory.createProjectTasksTask();
 
@@ -1482,7 +1482,7 @@ public final class MSPDIWriter extends AbstractProjectWriter
     * @param mpx Resource assignment data
     * @return New MSPDI assignment instance
     */
-   private Project.Assignments.Assignment writeAssignment(ResourceAssignment mpx)
+    protected Project.Assignments.Assignment writeAssignment(ResourceAssignment mpx)  //claur changed to protected
    {
       Project.Assignments.Assignment xml = m_factory.createProjectAssignmentsAssignment();
 

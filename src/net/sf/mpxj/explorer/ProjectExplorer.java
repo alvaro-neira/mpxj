@@ -111,6 +111,7 @@ public class ProjectExplorer
 
       JMenuItem mntmOpen = new JMenuItem("Open File...");
       mnFile.add(mntmOpen);
+
       final JMenuItem mntmSave = new JMenuItem("Save As...");
       mntmSave.setEnabled(false);
       mnFile.add(mntmSave);
@@ -150,6 +151,7 @@ public class ProjectExplorer
             mntmSave.setEnabled(true);
          }
       });
+
       PropertyAdapter<FileSaverModel> saveAdapter = new PropertyAdapter<FileSaverModel>(fileSaverModel, "file", true);
       saveAdapter.addValueChangeListener(new PropertyChangeListener()
       {
@@ -159,5 +161,6 @@ public class ProjectExplorer
             panel.saveFile(fileSaverModel.getFile(), fileSaverModel.getType());
          }
       });
+
    }
 }

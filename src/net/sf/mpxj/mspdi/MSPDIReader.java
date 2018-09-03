@@ -658,6 +658,11 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
       rd.setRelative(getRelative(NumberHelper.getInt(exception.getType())));
       rd.setOccurrences(NumberHelper.getInteger(exception.getOccurrences()));
 
+      if(rd.getRecurrenceType() == null){
+          System.err.println("RecurringData has null recurrenceType.");
+          return;
+      }
+
       switch (rd.getRecurrenceType())
       {
          case DAILY:
@@ -862,7 +867,7 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
     * @param project Root node of the MSPDI file
     * @param calendarMap Map of calendar UIDs to names
     */
-   private void readResources(Project project, HashMap<BigInteger, ProjectCalendar> calendarMap)
+    protected void readResources(Project project, HashMap<BigInteger, ProjectCalendar> calendarMap) //claur changed to protected
    {
       Project.Resources resources = project.getResources();
       if (resources != null)
@@ -1673,8 +1678,10 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
             mpx.setFinishVariance(DatatypeConverter.parseDurationInTenthsOfMinutes(m_projectFile.getProjectProperties(), assignment.getFinishVariance(), TimeUnit.DAYS));
 
             m_eventManager.fireAssignmentReadEvent(mpx);
+                return mpx; //claur
          }
       }
+        return null; //claur
    }
 
    /**
