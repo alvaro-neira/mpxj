@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
-
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 
 import net.sf.mpxj.MPXJException;
@@ -180,9 +179,6 @@ public final class UniversalProjectReader implements ProjectReader
             return null;
          }
 
-         //
-         // Always check for BOM first. Regex-based fingerprints may ignore these otherwise.
-         //
          if (matchesFingerprint(buffer, UTF8_BOM_FINGERPRINT))
          {
             return handleByteOrderMark(bis, UTF8_BOM_FINGERPRINT.length, CharsetHelper.UTF8);
@@ -366,7 +362,7 @@ public final class UniversalProjectReader implements ProjectReader
    {
       POIFSFileSystem fs = new POIFSFileSystem(POIFSFileSystem.createNonClosingInputStream(stream));
       String fileFormat = MPPReader.getFileFormat(fs);
-      if (fileFormat.startsWith("MSProject"))
+      if (fileFormat != null && fileFormat.startsWith("MSProject"))
       {
          MPPReader reader = new MPPReader();
          addListeners(reader);
@@ -508,7 +504,7 @@ public final class UniversalProjectReader implements ProjectReader
          {
             return result;
          }
-      }
+         }
 
       finally
       {
@@ -552,9 +548,9 @@ public final class UniversalProjectReader implements ProjectReader
          for (File file : files)
          {
             if (file.isDirectory())
-            {
-               continue;
-            }
+         {
+            continue;
+         }
 
             FileInputStream fis = new FileInputStream(file);
             int bytesRead = fis.read(buffer);
@@ -608,9 +604,9 @@ public final class UniversalProjectReader implements ProjectReader
             {
                UniversalProjectReader reader = new UniversalProjectReader();
                ProjectFile result = reader.read(file);
-               if (result != null)
-               {
-                  return result;
+         if (result != null)
+         {
+            return result;
                }
             }
          }
@@ -753,7 +749,7 @@ public final class UniversalProjectReader implements ProjectReader
             break;
          }
       }
-      if (project == null)
+      if (project == null && !projects.isEmpty())
       {
          project = projects.get(0);
       }
@@ -1005,7 +1001,7 @@ public final class UniversalProjectReader implements ProjectReader
 
    private static final Pattern PMXML_FINGERPRINT = Pattern.compile(".*(<BusinessObjects|APIBusinessObjects).*", Pattern.DOTALL);
 
-   private static final Pattern MSPDI_FINGERPRINT = Pattern.compile(".*xmlns=\"http://schemas\\.microsoft\\.com/project.*", Pattern.DOTALL);
+   private static final Pattern MSPDI_FINGERPRINT = Pattern.compile(".*xmlns=\"http://schemas\\.microsoft\\.com/project\".*", Pattern.DOTALL);
 
    private static final Pattern PHOENIX_XML_FINGERPRINT = Pattern.compile(".*<project.*version=\"(\\d+|\\d+\\.\\d+)\".*update_mode=\"(true|false)\".*>.*", Pattern.DOTALL);
 

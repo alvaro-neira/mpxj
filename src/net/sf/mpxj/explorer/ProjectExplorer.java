@@ -95,7 +95,7 @@ public class ProjectExplorer
       final FileChooserController fileChooserController = new FileChooserController(fileChooserModel);
       @SuppressWarnings("unused")
       FileChooserView fileChooserView = new FileChooserView(m_frame, fileChooserModel);
-      fileChooserModel.setExtensions("cdpx", "cdpz", "fts", "gan", "mdb", "mpp", "mpx", "pep", "planner", "pmxml", "pod", "pp", "ppx", "prx", "stx", "xer", "xml", "zip", "zip");
+      fileChooserModel.setExtensions("cdpx", "cdpz", "fts", "gan", "mdb", "mpp", "mpx", "pep", "planner", "pmxml", "pod", "pp", "ppx", "prx", "stx", "xer", "xml", "zip");
 
       final FileSaverModel fileSaverModel = new FileSaverModel();
       final FileSaverController fileSaverController = new FileSaverController(fileSaverModel);
@@ -111,7 +111,6 @@ public class ProjectExplorer
 
       JMenuItem mntmOpen = new JMenuItem("Open File...");
       mnFile.add(mntmOpen);
-
       final JMenuItem mntmSave = new JMenuItem("Save As...");
       mntmSave.setEnabled(false);
       mnFile.add(mntmSave);
@@ -151,7 +150,6 @@ public class ProjectExplorer
             mntmSave.setEnabled(true);
          }
       });
-
       PropertyAdapter<FileSaverModel> saveAdapter = new PropertyAdapter<FileSaverModel>(fileSaverModel, "file", true);
       saveAdapter.addValueChangeListener(new PropertyChangeListener()
       {
@@ -161,6 +159,5 @@ public class ProjectExplorer
             panel.saveFile(fileSaverModel.getFile(), fileSaverModel.getType());
          }
       });
-
    }
 }
