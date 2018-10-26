@@ -178,6 +178,7 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
          m_projectFile = projectFile;
          m_projectFile.validateUniqueIDsForMicrosoftProject();
          m_eventManager = m_projectFile.getEventManager();
+         DatatypeConverter.setParentFile(m_projectFile);
 
          Marshaller marshaller = CONTEXT.createMarshaller();
          marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
@@ -194,7 +195,6 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
          writeAssignments(project);
          writeProjectExtendedAttributes(project);
 
-         DatatypeConverter.setParentFile(m_projectFile);
          marshaller.marshal(project, stream);
       }
 
@@ -362,11 +362,8 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
       calendar.setIsBaseCalendar(Boolean.valueOf(!bc.isDerived()));
 
       ProjectCalendar base = bc.getParent();
-      if (base != null)
-      {
-         calendar.setBaseCalendarUID(NumberHelper.getBigInteger(base.getUniqueID()));
-      }
-
+      // SF-329: null default required to keep Powerproject happy when importing MSPDI files
+      calendar.setBaseCalendarUID(base == null ? NULL_CALENDAR_ID : NumberHelper.getBigInteger(base.getUniqueID()));
       calendar.setName(bc.getName());
 
       //
@@ -1354,7 +1351,7 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
       }
       else
       {
-         result = BigInteger.valueOf(-1);
+         result = NULL_CALENDAR_ID;
       }
       return (result);
    }
@@ -1414,6 +1411,12 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
          }
          link.setLinkLag(BigInteger.valueOf((long) linkLag));
          link.setLagFormat(DatatypeConverter.printDurationTimeUnits(lag.getUnits(), false));
+      }
+      else
+      {
+         // SF-329: default required to keep Powerproject happy when importing MSPDI files
+         link.setLinkLag(BIGINTEGER_ZERO);
+         link.setLagFormat(DatatypeConverter.printDurationTimeUnits(m_projectFile.getProjectProperties().getDefaultDurationUnits(), false));
       }
 
       return (link);
@@ -2037,4 +2040,6 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
    private static final BigInteger BIGINTEGER_ZERO = BigInteger.valueOf(0);
 
    private static final Integer NULL_RESOURCE_ID = Integer.valueOf(-65535);
+
+   private static final BigInteger NULL_CALENDAR_ID = BigInteger.valueOf(-1);
 }
