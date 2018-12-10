@@ -54,6 +54,7 @@ import net.sf.mpxj.TaskType;
 import net.sf.mpxj.TimeUnit;
 import net.sf.mpxj.WorkContour;
 import net.sf.mpxj.WorkGroup;
+import net.sf.mpxj.common.DateHelper;
 import net.sf.mpxj.common.NumberHelper;
 
 /**
@@ -580,7 +581,6 @@ public final class DatatypeConverter
          cal = Calendar.getInstance();
          cal.setTime(value);
          cal.set(Calendar.MILLISECOND, 0);
-         cal.set(Calendar.SECOND, 0);
       }
 
       return (cal);
@@ -598,7 +598,7 @@ public final class DatatypeConverter
 
       if (value != null)
       {
-         Calendar cal = Calendar.getInstance();
+         Calendar cal = DateHelper.popCalendar();
          cal.set(Calendar.YEAR, value.get(Calendar.YEAR));
          cal.set(Calendar.MONTH, value.get(Calendar.MONTH));
          cal.set(Calendar.DAY_OF_MONTH, value.get(Calendar.DAY_OF_MONTH));
@@ -607,6 +607,7 @@ public final class DatatypeConverter
          cal.set(Calendar.SECOND, value.get(Calendar.SECOND));
          cal.set(Calendar.MILLISECOND, value.get(Calendar.MILLISECOND));
          result = cal.getTime();
+         DateHelper.pushCalendar(cal);
       }
 
       return (result);
@@ -627,7 +628,6 @@ public final class DatatypeConverter
          cal = Calendar.getInstance();
          cal.setTime(value);
          cal.set(Calendar.MILLISECOND, 0);
-         cal.set(Calendar.SECOND, 0);
       }
 
       return (cal);
@@ -645,12 +645,13 @@ public final class DatatypeConverter
 
       if (value != null)
       {
-         Calendar cal = Calendar.getInstance();
+         Calendar cal = DateHelper.popCalendar();
          cal.set(Calendar.HOUR_OF_DAY, value.get(Calendar.HOUR_OF_DAY));
          cal.set(Calendar.MINUTE, value.get(Calendar.MINUTE));
          cal.set(Calendar.SECOND, value.get(Calendar.SECOND));
          cal.set(Calendar.MILLISECOND, value.get(Calendar.MILLISECOND));
          result = cal.getTime();
+         DateHelper.pushCalendar(cal);
       }
 
       return (result);

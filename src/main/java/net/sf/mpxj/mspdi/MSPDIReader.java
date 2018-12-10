@@ -46,6 +46,7 @@ import javax.xml.bind.ValidationEventHandler;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLFilter;
@@ -88,6 +89,7 @@ import net.sf.mpxj.TimeUnit;
 import net.sf.mpxj.TimephasedWork;
 import net.sf.mpxj.common.BooleanHelper;
 import net.sf.mpxj.common.CharsetHelper;
+import net.sf.mpxj.common.DateHelper;
 import net.sf.mpxj.common.DefaultTimephasedWorkContainer;
 import net.sf.mpxj.common.FieldTypeHelper;
 import net.sf.mpxj.common.MPPAssignmentField;
@@ -149,6 +151,7 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
       }
       return result;
    }
+
    /**
     * {@inheritDoc}
     */
@@ -452,6 +455,7 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
 
       readExceptions(calendar, bc);
       boolean readExceptionsFromDays = bc.getCalendarExceptions().isEmpty();
+
       Project.Calendars.Calendar.WeekDays days = calendar.getWeekDays();
       if (days != null)
       {
@@ -493,9 +497,9 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
          if (dayType.intValue() == 0)
          {
             if (readExceptionsFromDays)
-         {
-            readExceptionDay(calendar, day);
-         }
+            {
+               readExceptionDay(calendar, day);
+            }
          }
          else
          {
@@ -529,10 +533,7 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
             {
                if (startTime.getTime() >= endTime.getTime())
                {
-                  Calendar cal = Calendar.getInstance();
-                  cal.setTime(endTime);
-                  cal.add(Calendar.DAY_OF_YEAR, 1);
-                  endTime = cal.getTime();
+                  endTime = DateHelper.addDays(endTime, 1);
                }
 
                hours.addRange(new DateRange(startTime, endTime));
@@ -567,10 +568,7 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
             {
                if (startTime.getTime() >= endTime.getTime())
                {
-                  Calendar cal = Calendar.getInstance();
-                  cal.setTime(endTime);
-                  cal.add(Calendar.DAY_OF_YEAR, 1);
-                  endTime = cal.getTime();
+                  endTime = DateHelper.addDays(endTime, 1);
                }
 
                exception.addRange(new DateRange(startTime, endTime));
@@ -606,43 +604,40 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
     */
    private void readException(ProjectCalendar bc, Project.Calendars.Calendar.Exceptions.Exception exception)
    {
-            Date fromDate = DatatypeConverter.parseDate(exception.getTimePeriod().getFromDate());
-            Date toDate = DatatypeConverter.parseDate(exception.getTimePeriod().getToDate());
+      Date fromDate = DatatypeConverter.parseDate(exception.getTimePeriod().getFromDate());
+      Date toDate = DatatypeConverter.parseDate(exception.getTimePeriod().getToDate());
 
-            // Vico Schedule Planner seems to write start and end dates to FromeTime and ToTime
-            // rather than FromDate and ToDate. This is plain wrong, and appears to be ignored by MS Project
-            // so we will ignore it too!
-            if (fromDate != null && toDate != null)
-            {
-               ProjectCalendarException bce = bc.addCalendarException(fromDate, toDate);
-
+      // Vico Schedule Planner seems to write start and end dates to FromTime and ToTime
+      // rather than FromDate and ToDate. This is plain wrong, and appears to be ignored by MS Project
+      // so we will ignore it too!
+      if (fromDate != null && toDate != null)
+      {
+         ProjectCalendarException bce = bc.addCalendarException(fromDate, toDate);
          bce.setName(exception.getName());
          readRecurringData(bce, exception);
-               Project.Calendars.Calendar.Exceptions.Exception.WorkingTimes times = exception.getWorkingTimes();
-               if (times != null)
+         Project.Calendars.Calendar.Exceptions.Exception.WorkingTimes times = exception.getWorkingTimes();
+         if (times != null)
+         {
+            List<Project.Calendars.Calendar.Exceptions.Exception.WorkingTimes.WorkingTime> time = times.getWorkingTime();
+            for (Project.Calendars.Calendar.Exceptions.Exception.WorkingTimes.WorkingTime period : time)
+            {
+               Date startTime = DatatypeConverter.parseTime(period.getFromTime());
+               Date endTime = DatatypeConverter.parseTime(period.getToTime());
+
+               if (startTime != null && endTime != null)
                {
-                  List<Project.Calendars.Calendar.Exceptions.Exception.WorkingTimes.WorkingTime> time = times.getWorkingTime();
-                  for (Project.Calendars.Calendar.Exceptions.Exception.WorkingTimes.WorkingTime period : time)
+                  if (startTime.getTime() >= endTime.getTime())
                   {
-                     Date startTime = DatatypeConverter.parseTime(period.getFromTime());
-                     Date endTime = DatatypeConverter.parseTime(period.getToTime());
-
-                     if (startTime != null && endTime != null)
-                     {
-                        if (startTime.getTime() >= endTime.getTime())
-                        {
-                           Calendar cal = Calendar.getInstance();
-                           cal.setTime(endTime);
-                           cal.add(Calendar.DAY_OF_YEAR, 1);
-                           endTime = cal.getTime();
-                        }
-
-                        bce.addRange(new DateRange(startTime, endTime));
-                     }
+                     endTime = DateHelper.addDays(endTime, 1);
                   }
+
+                  bce.addRange(new DateRange(startTime, endTime));
                }
             }
          }
+      }
+   }
+
    /**
     * Read recurring data for a calendar exception.
     *
@@ -669,7 +664,8 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
          {
             rd.setFrequency(getFrequency(exception));
             break;
-      }
+         }
+
          case WEEKLY:
          {
             rd.setWeeklyDaysFromBitmap(NumberHelper.getInteger(exception.getDaysOfWeek()), DAY_MASKS);
@@ -813,10 +809,7 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
                         {
                            if (startTime.getTime() >= endTime.getTime())
                            {
-                              Calendar cal = Calendar.getInstance();
-                              cal.setTime(endTime);
-                              cal.add(Calendar.DAY_OF_YEAR, 1);
-                              endTime = cal.getTime();
+                              endTime = DateHelper.addDays(endTime, 1);
                            }
 
                            hours.addRange(new DateRange(startTime, endTime));
@@ -1330,6 +1323,7 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
          mpx.setWorkVariance(Duration.getInstance(NumberHelper.getDouble(xml.getWorkVariance()) / 1000, TimeUnit.MINUTES));
 
          validateFinishDate(mpx);
+
          // read last to ensure correct caching
          mpx.setStartSlack(DatatypeConverter.parseDurationInTenthsOfMinutes(xml.getStartSlack()));
          mpx.setFinishSlack(DatatypeConverter.parseDurationInTenthsOfMinutes(xml.getFinishSlack()));
@@ -1537,8 +1531,7 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
                if (lagUnits == TimeUnit.PERCENT || lagUnits == TimeUnit.ELAPSED_PERCENT)
                {
                   lagDuration = Duration.getInstance(lag, lagUnits);
-            }
-
+               }
                else
                {
                   lagDuration = Duration.convertUnits(lag / 10.0, TimeUnit.MINUTES, lagUnits, m_projectFile.getProjectProperties());
@@ -1586,35 +1579,33 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
          Task task = m_projectFile.getTaskByUniqueID(Integer.valueOf(taskUID.intValue()));
          if (task != null)
          {
-         Resource resource = m_projectFile.getResourceByUniqueID(Integer.valueOf(resourceUID.intValue()));
-
-         //System.out.println(task);
-         ProjectCalendar calendar = null;
-         if (resource != null)
-         {
-            calendar = resource.getResourceCalendar();
-         }
+            Resource resource = m_projectFile.getResourceByUniqueID(Integer.valueOf(resourceUID.intValue()));
+            ProjectCalendar calendar = null;
+            if (resource != null)
+            {
+               calendar = resource.getResourceCalendar();
+            }
 
             if (calendar == null || task.getIgnoreResourceCalendar())
-         {
+            {
                calendar = task.getEffectiveCalendar();
-         }
+            }
 
-         LinkedList<TimephasedWork> timephasedComplete = readTimephasedAssignment(calendar, assignment, 2);
-         LinkedList<TimephasedWork> timephasedPlanned = readTimephasedAssignment(calendar, assignment, 1);
-         boolean raw = true;
+            LinkedList<TimephasedWork> timephasedComplete = readTimephasedAssignment(calendar, assignment, 2);
+            LinkedList<TimephasedWork> timephasedPlanned = readTimephasedAssignment(calendar, assignment, 1);
+            boolean raw = true;
 
-         if (isSplit(calendar, timephasedComplete) || isSplit(calendar, timephasedPlanned))
-         {
-            task.setSplits(new LinkedList<DateRange>());
-            normaliser.normalise(calendar, timephasedComplete);
-            normaliser.normalise(calendar, timephasedPlanned);
-            splitFactory.processSplitData(task, timephasedComplete, timephasedPlanned);
-            raw = false;
-         }
+            if (isSplit(calendar, timephasedComplete) || isSplit(calendar, timephasedPlanned))
+            {
+               task.setSplits(new LinkedList<DateRange>());
+               normaliser.normalise(calendar, timephasedComplete);
+               normaliser.normalise(calendar, timephasedPlanned);
+               splitFactory.processSplitData(task, timephasedComplete, timephasedPlanned);
+               raw = false;
+            }
 
-         DefaultTimephasedWorkContainer timephasedCompleteData = new DefaultTimephasedWorkContainer(calendar, normaliser, timephasedComplete, raw);
-         DefaultTimephasedWorkContainer timephasedPlannedData = new DefaultTimephasedWorkContainer(calendar, normaliser, timephasedPlanned, raw);
+            DefaultTimephasedWorkContainer timephasedCompleteData = new DefaultTimephasedWorkContainer(calendar, normaliser, timephasedComplete, raw);
+            DefaultTimephasedWorkContainer timephasedPlannedData = new DefaultTimephasedWorkContainer(calendar, normaliser, timephasedPlanned, raw);
 
             ResourceAssignment mpx = task.addResourceAssignment(resource);
 
@@ -1873,12 +1864,12 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
    }
 
    private boolean m_compatibleInput = true;
-
    private String m_encoding;
    private Charset m_charset;
    protected ProjectFile m_projectFile; //claur need protected to add default assignment
    private EventManager m_eventManager;
    private List<ProjectListener> m_projectListeners;
+
    private static final RecurrenceType[] RECURRENCE_TYPES =
    {
       null,
