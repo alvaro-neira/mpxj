@@ -28,7 +28,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -532,7 +531,7 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
             if (startTime != null && endTime != null)
             {
                if (startTime.getTime() >= endTime.getTime())
-               {
+               {                  
                   endTime = DateHelper.addDays(endTime, 1);
                }
 
@@ -627,7 +626,7 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
                if (startTime != null && endTime != null)
                {
                   if (startTime.getTime() >= endTime.getTime())
-                  {
+                  {                    
                      endTime = DateHelper.addDays(endTime, 1);
                   }
 
@@ -646,17 +645,15 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
     */
    private void readRecurringData(ProjectCalendarException bce, Project.Calendars.Calendar.Exceptions.Exception exception)
    {
+      RecurrenceType rt = getRecurrenceType(NumberHelper.getInt(exception.getType()));
+      if (rt != null)
+   {
       RecurringData rd = new RecurringData();
       rd.setStartDate(bce.getFromDate());
       rd.setFinishDate(bce.getToDate());
-      rd.setRecurrenceType(getRecurrenceType(NumberHelper.getInt(exception.getType())));
+         rd.setRecurrenceType(rt);
       rd.setRelative(getRelative(NumberHelper.getInt(exception.getType())));
       rd.setOccurrences(NumberHelper.getInteger(exception.getOccurrences()));
-
-      if(rd.getRecurrenceType() == null){
-          System.err.println("RecurringData has null recurrenceType.");
-          return;
-      }
 
       switch (rd.getRecurrenceType())
       {
@@ -707,6 +704,7 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
       if (rd.getRecurrenceType() != RecurrenceType.DAILY || rd.getDates().length > 1)
       {
          bce.setRecurring(rd);
+         }
       }
    }
 
@@ -909,6 +907,7 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
       mpx.setCV(DatatypeConverter.parseCurrency(xml.getCV()));
       mpx.setEmailAddress(xml.getEmailAddress());
       mpx.setGroup(xml.getGroup());
+      mpx.setGUID(xml.getGUID());
       mpx.setHyperlink(xml.getHyperlink());
       mpx.setHyperlinkAddress(xml.getHyperlinkAddress());
       mpx.setHyperlinkSubAddress(xml.getHyperlinkSubAddress());
@@ -1229,6 +1228,7 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
          //mpx.setFlag9();
          //mpx.setFlag10();
          // This is not correct?
+         mpx.setGUID(xml.getGUID());
          mpx.setHideBar(BooleanHelper.getBoolean(xml.isHideBar()));
          mpx.setHyperlink(xml.getHyperlink());
          mpx.setHyperlinkAddress(xml.getHyperlinkAddress());
@@ -1630,6 +1630,7 @@ public class MSPDIReader extends AbstractProjectReader //claur removed final to 
             mpx.setDelay(DatatypeConverter.parseDurationInTenthsOfMinutes(assignment.getDelay()));
             mpx.setFinish(assignment.getFinish());
             mpx.setVariableRateUnits(BooleanHelper.getBoolean(assignment.isHasFixedRateUnits()) ? null : DatatypeConverter.parseTimeUnit(assignment.getRateScale()));
+            mpx.setGUID(assignment.getGUID());
             mpx.setHyperlink(assignment.getHyperlink());
             mpx.setHyperlinkAddress(assignment.getHyperlinkAddress());
             mpx.setHyperlinkSubAddress(assignment.getHyperlinkSubAddress());

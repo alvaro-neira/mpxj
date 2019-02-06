@@ -786,6 +786,7 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
       xml.setEmailAddress(mpx.getEmailAddress());
       xml.setFinish(mpx.getFinish());
       xml.setGroup(mpx.getGroup());
+      xml.setGUID(mpx.getGUID());
       xml.setHyperlink(mpx.getHyperlink());
       xml.setHyperlinkAddress(mpx.getHyperlinkAddress());
       xml.setHyperlinkSubAddress(mpx.getHyperlinkSubAddress());
@@ -1102,6 +1103,7 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
       //xml.setFreeSlack(BigInteger.valueOf((long)DatatypeConverter.printDurationInMinutes(mpx.getFreeSlack())*1000));
       //xml.setFreeSlack(BIGINTEGER_ZERO);
       xml.setFreeSlack(DatatypeConverter.printDurationInIntegerTenthsOfMinutes(mpx.getFreeSlack()));
+      xml.setGUID(mpx.getGUID());
       xml.setHideBar(Boolean.valueOf(mpx.getHideBar()));
       xml.setIsNull(Boolean.valueOf(mpx.getNull()));
       xml.setIsSubproject(Boolean.valueOf(mpx.getSubProject() != null));
@@ -1489,7 +1491,13 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
             dummy.setWork(duration);
             dummy.setActualWork(Duration.getInstance(actualWork, durationUnits));
             dummy.setRemainingWork(Duration.getInstance(remainingWork, durationUnits));
-
+            
+            // Without this, MS Project will mark a 100% complete milestone as 99% complete
+            if (percentComplete == 100 && duration.getDuration() == 0)
+            {              
+               dummy.setActualFinish(task.getActualStart());
+            }
+            
             list.add(writeAssignment(dummy));
          }
       }
@@ -1529,6 +1537,7 @@ public class MSPDIWriter extends AbstractProjectWriter //claur removed final to 
       xml.setCV(DatatypeConverter.printCurrency(mpx.getCV()));
       xml.setDelay(DatatypeConverter.printDurationInIntegerTenthsOfMinutes(mpx.getDelay()));
       xml.setFinish(mpx.getFinish());
+      xml.setGUID(mpx.getGUID());
       xml.setHasFixedRateUnits(Boolean.valueOf(mpx.getVariableRateUnits() == null));
       xml.setFixedMaterial(Boolean.valueOf(mpx.getResource() != null && mpx.getResource().getType() == ResourceType.MATERIAL));
       xml.setHyperlink(mpx.getHyperlink());
