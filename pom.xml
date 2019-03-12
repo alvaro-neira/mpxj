@@ -9,7 +9,7 @@
 	<artifactId>mpxj</artifactId>
 
 	<!-- Note - this is automatically updated by the ant build ... don't remove the MPXJ comment! -->
-	<!-- MPXJ --><version>7.8.0</version>
+	<!-- MPXJ --><version>7.8.1</version>
 
 	<name>MPXJ</name>
 	<url>http://mpxj.org</url>
@@ -186,7 +186,10 @@
 		</contributor>
 		<contributor>
 			<name>Paul Pogonyshev</name>
-		</contributor>
+		</contributor>		
+		<contributor>
+			<name>Sebastian Stock</name>
+		</contributor>		
 		<contributor>
 			<name>James Styles</name>
 		</contributor>
@@ -338,6 +341,7 @@
 				<configuration>
 					<additionalparam>-Xdoclint:none</additionalparam>
 					<notimestamp>true</notimestamp>
+					<excludePackageNames>*.schema.*</excludePackageNames>
 				</configuration>
 				<executions>
 					<execution>
@@ -439,6 +443,7 @@
 				<configuration>
 					<additionalparam>-Xdoclint:none</additionalparam>
 					<notimestamp>true</notimestamp>
+					<excludePackageNames>*.schema.*</excludePackageNames>
 				</configuration>
 			</plugin>
 
